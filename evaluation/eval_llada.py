@@ -91,7 +91,7 @@ class LLaDAEvalHarness(LM):
             model_path,
             trust_remote_code=True,
             low_cpu_mem_usage=True,
-            bnb_config=bnb_config,
+            quantization_config=bnb_config,
             torch_dtype=torch.float16,
         )
         self.model.eval()
