@@ -13,13 +13,11 @@ from lm_eval.__main__ import cli_evaluate
 from lm_eval.api.instance import Instance
 from lm_eval.api.model import LM
 from lm_eval.api.registry import register_model
+from lm_eval.evaluator import eval_logger as logger
 from tqdm import tqdm
 
 from transformers import AutoTokenizer, AutoModel, BitsAndBytesConfig
 from generate import generate
-import logging
-
-logger = logging.getLogger(__name__)
 
 def set_seed(seed):
     torch.manual_seed(seed)
@@ -251,6 +249,7 @@ class LLaDAEvalHarness(LM):
         raise NotImplementedError
 
     def generate_until(self, requests: list[Instance]):
+        logger.info(f"[Rank {self.rank}] → ENTER generate_until (got {len(requests)} requests)")
         def _tokenize(e):
             return {
                 "question": self.tokenizer(e["question"])["input_ids"],
@@ -260,8 +259,11 @@ class LLaDAEvalHarness(LM):
 
         ds = [{"question": req.args[0], "until": req.args[1]['until']} for req in requests]
         ds = Dataset.from_list(ds)
+        logger.info(f"[Rank {self.rank}] Created dataset with {len(ds)} instances")
+        
         ds = ds.map(_tokenize)
         ds = ds.with_format("torch")
+        logger.info(f"[Rank {self.rank}] Tokenized and formatted dataset")
 
         out = []
         import time
@@ -274,45 +276,30 @@ class LLaDAEvalHarness(LM):
             gen_start = time.time()
             logger.info(f"[Rank {self._rank}] Starting generation {idx+1}/{len(ds)} with {self.steps} steps")
             
-            # Add progress callback for generation
-            def progress_callback(step, total_steps):
-                if step % 10 == 0:  # Log every 10 steps
-                    logger.info(f"[Rank {self._rank}] Generation progress: {step}/{total_steps} steps ({(step/total_steps)*100:.1f}%)")
-            
             generated_answer = generate(self.model, prompt, steps=self.steps, gen_length=self.gen_length, block_length=self.block_length,
-                                     temperature=0, cfg_scale=self.cfg, remasking=self.remasking, mask_id=self.mask_id,
-                                     progress_callback=progress_callback)
+                                    temperature=0, cfg_scale=self.cfg, remasking=self.remasking, mask_id=self.mask_id)
             
             gen_time = time.time() - gen_start
             logger.info(f"[Rank {self._rank}] Completed generation {idx+1} in {gen_time:.2f}s")
             
             generated_answer = self.tokenizer.decode(generated_answer[0][prompt.shape[1]:], skip_special_tokens=False)
             for stop_seq in stop_tokens:
-                    if stop_seq in generated_answer:
-                        generated_answer = generated_answer.split(stop_seq)[0]
+                if stop_seq in generated_answer:
+                    generated_answer = generated_answer.split(stop_seq)[0]
 
             # remove special tokens
             generated_answer_ids = self.tokenizer(generated_answer)["input_ids"]
             generated_answer = self.tokenizer.decode(generated_answer_ids, skip_special_tokens=True)
             out.append(generated_answer)
 
-            self.accelerator.wait_for_everyone()
+            if self.accelerator is not None:
+                self.accelerator.wait_for_everyone()
+        
+        logger.info(f"[Rank {self.rank}] ← EXIT generate_until (produced {len(out)} answers)")
 
         return out
 
 
 if __name__ == "__main__":
-    # Configure logging to show INFO level messages
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        force=True,
-        handlers=[
-            logging.StreamHandler(),
-            logging.FileHandler('eval.log')
-        ]
-    )
-    logger.info("Starting evaluation...")
     set_seed(1234)
     cli_evaluate()
-    
