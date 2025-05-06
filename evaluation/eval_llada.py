@@ -285,7 +285,8 @@ class LLaDAEvalHarness(LM):
             took = time.time() - start
             logger.info(f"[Rank {self.rank}] [{time.strftime('%X')}] generate() returned in {took:.2f}s")
             
-            generated_answer = self.tokenizer.decode(generated_answer[0][elem["question"].shape[1]:], skip_special_tokens=False)
+            prefix_len = prompt.size(1)  # get prompt's token length
+            generated_answer = self.tokenizer.decode(generated_answer[0][prefix_len:], skip_special_tokens=False)
             for stop_seq in elem["until"]:
                 if stop_seq in generated_answer:
                     generated_answer = generated_answer.split(stop_seq)[0]
