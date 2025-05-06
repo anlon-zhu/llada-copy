@@ -292,6 +292,12 @@ class LLaDAEvalHarness(LM):
 
 
 if __name__ == "__main__":
+    # Configure logging to show INFO level messages
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        force=True
+    )
     set_seed(1234)
     cli_evaluate()
     
