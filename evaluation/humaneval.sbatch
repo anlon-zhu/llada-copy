@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=eval_humaneval
-#SBATCH --output=%j_eval_humaneval.log     
-#SBATCH --error=%j_eval_humaneval.err 
+#SBATCH --output=logs/%j_eval_humaneval.log     
 #SBATCH --partition=pvl
 #SBATCH --account=pvl
 #SBATCH --ntasks=1               
@@ -33,7 +32,7 @@ accelerate launch --multi_gpu --num_processes=4 eval_llada.py \
     --tasks humaneval \
     --model llada_dist \
     --confirm_run_unsafe_code \
-    --model_args model_path='GSAI-ML/LLaDA-8B-Base',gen_length=1024,steps=1024,block_length=1024
+    --model_args model_path='GSAI-ML/LLaDA-8B-Base',gen_length=256,steps=256,block_length=256
 
 # accelerate launch --multi_gpu --num_processes=4 eval_llada.py \
 #     --tasks mbpp \

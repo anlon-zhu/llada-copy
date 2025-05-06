@@ -257,12 +257,24 @@ class LLaDAEvalHarness(LM):
         ds = ds.with_format("torch")
 
         out = []
-        for elem in tqdm(ds, desc="Generating..."):
+        import time
+        import logging
+        logging.basicConfig(level=logging.INFO)
+        logger = logging.getLogger(__name__)
+        
+        total_start = time.time()
+        for idx, elem in enumerate(tqdm(ds, desc="Generating...")):
             prompt = elem["question"].unsqueeze(0).to(self.device)
             stop_tokens = elem["until"]
- 
+            
+            gen_start = time.time()
+            logger.info(f"[Rank {self._rank}] Starting generation {idx+1}/{len(ds)} with {self.steps} steps")
+            
             generated_answer = generate(self.model, prompt, steps=self.steps, gen_length=self.gen_length, block_length=self.block_length, 
                                         temperature=0, cfg_scale=self.cfg, remasking=self.remasking, mask_id=self.mask_id)
+            
+            gen_time = time.time() - gen_start
+            logger.info(f"[Rank {self._rank}] Completed generation {idx+1} in {gen_time:.2f}s")
             
             generated_answer = self.tokenizer.decode(generated_answer[0][prompt.shape[1]:], skip_special_tokens=False)
             for stop_seq in stop_tokens:
