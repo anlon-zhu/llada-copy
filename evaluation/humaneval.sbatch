@@ -2,12 +2,16 @@
 #SBATCH --job-name=eval_humaneval
 #SBATCH --output=%j_eval_humaneval.log     
 #SBATCH --error=%j_eval_humaneval.err 
+#SBATCH --partition=pvl
+#SBATCH --account=pvl
 #SBATCH --ntasks=1               
 #SBATCH --nodes=1          
 #SBATCH --gres=gpu:a6000:4
 #SBATCH --cpus-per-task=8 
 #SBATCH --mem=64G                
-#SBATCH --time=24:00:00          
+#SBATCH --time=24:00:00    
+#SBATCH --mail-user=az4244@princeton.edu
+#SBATCH --mail-type=END,FAIL
 
 # Load necessary modules (adjust based on your cluster setup)
 export CONDA_ENVS_PATH=/n/fs/vl/anlon/envs
