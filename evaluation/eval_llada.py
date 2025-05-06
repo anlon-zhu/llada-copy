@@ -267,12 +267,17 @@ class LLaDAEvalHarness(LM):
 
         out = []
         for i, elem in enumerate(ds):
-            logger.info(f"[Rank {self.rank}] [{time.strftime('%X')}] about to generate instance {i+1}/{len(ds)}")
+            # 1. Create prompt tensor and get its length
+            prompt = elem["question"].unsqueeze(0).to(self.device)
+            prefix_len = prompt.shape[1]
+
+            # 2. Log and generate
+            logger.info(f"[LLADA] [Rank {self.rank}] about to generate instance {i+1}/{len(ds)}")
             start = time.time()
             
             generated_answer = generate(
                 self.model,
-                prompt=elem["question"].unsqueeze(0).to(self.device),
+                prompt=prompt,
                 steps=self.steps,
                 gen_length=self.gen_length,
                 block_length=self.block_length,
@@ -283,10 +288,11 @@ class LLaDAEvalHarness(LM):
             )
             
             took = time.time() - start
-            logger.info(f"[Rank {self.rank}] [{time.strftime('%X')}] generate() returned in {took:.2f}s")
+            logger.info(f"[LLADA] [Rank {self.rank}] generate() returned in {took:.2f}s")
             
-            prefix_len = prompt.size(1)  # get prompt's token length
-            generated_answer = self.tokenizer.decode(generated_answer[0][prefix_len:], skip_special_tokens=False)
+            # 3. Decode output, stripping prompt tokens
+            token_ids = generated_answer[0][prefix_len:]
+            generated_answer = self.tokenizer.decode(token_ids, skip_special_tokens=False)
             for stop_seq in elem["until"]:
                 if stop_seq in generated_answer:
                     generated_answer = generated_answer.split(stop_seq)[0]
