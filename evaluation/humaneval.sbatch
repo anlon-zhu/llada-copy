@@ -26,7 +26,7 @@ export HF_DATASETS_TRUST_REMOTE_CODE=true
 accelerate config default --config_file config.yaml
 
 # Run evaluations
-accelerate launch --multi_gpu --num_processes=4 --main_process_port 0 \
+accelerate launch --multi_gpu --num_processes=4 --main_process_port 29501 \
     eval_llada.py \
     --tasks humaneval \
     --model llada_dist \
