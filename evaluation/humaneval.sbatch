@@ -22,6 +22,11 @@ source ../scripts/cache_setup.sh
 export HF_ALLOW_CODE_EVAL=1
 export HF_DATASETS_TRUST_REMOTE_CODE=true
 export LOGLEVEL=INFO
+export TMPDIR=/tmp/$USER/llada_eval_tmp
+export TEMP=$TMPDIR
+export TMP=$TMPDIR
+mkdir -p $TMPDIR
+
 
 # Configure accelerate for distributed training
 accelerate config default --config_file config.yaml
@@ -32,7 +37,7 @@ accelerate launch --multi_gpu --num_processes=4 --main_process_port=29501 \
     --tasks humaneval \
     --model llada_dist \
     --confirm_run_unsafe_code \
-    --model_args model_path='GSAI-ML/LLaDA-8B-Base',gen_length=256,steps=256,block_length=256
+    --model_args model_path='GSAI-ML/LLaDA-8B-Base',gen_length=1024,steps=1024,block_length=1024
 
 # accelerate launch --multi_gpu --num_processes=4 eval_llada.py \
 #     --tasks mbpp \
