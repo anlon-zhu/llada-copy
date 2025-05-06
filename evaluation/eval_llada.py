@@ -268,7 +268,7 @@ class LLaDAEvalHarness(LM):
 
 
     def generate_until(self, requests: list[Instance]):
-        logger.info(f"[LLADA] [Rank {self.rank}] ENTER generate_until with {len(requests)} requests")
+        logger.info(f"[LLADA] [Rank {self.rank}] ENTER generate_until with {len(requests)} requests, running on device {self.device}")
         
         # Process requests directly without datasets overhead
         processed = [
@@ -319,8 +319,6 @@ class LLaDAEvalHarness(LM):
             out.append(generated_answer)
 
         logger.info(f"[LLADA] [Rank {self.rank}] EXIT generate_until (produced {len(out)} answers)")
-        if self.accelerator is not None:
-            self.accelerator.wait_for_everyone()
         return out
 if __name__ == "__main__":
     set_seed(1234)
