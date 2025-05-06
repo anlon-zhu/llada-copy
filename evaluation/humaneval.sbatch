@@ -1,8 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=eval_humaneval
 #SBATCH --output=logs/%j_eval_humaneval.log     
-#SBATCH --partition=pvl
-#SBATCH --account=pvl
 #SBATCH --ntasks=1               
 #SBATCH --nodes=1          
 #SBATCH --gres=gpu:a6000:4
