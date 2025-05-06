@@ -18,6 +18,7 @@ from tqdm import tqdm
 
 from transformers import AutoTokenizer, AutoModel, BitsAndBytesConfig
 from generate import generate
+import time
 
 def set_seed(seed):
     torch.manual_seed(seed)
