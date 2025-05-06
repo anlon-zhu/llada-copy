@@ -3,7 +3,7 @@
 #SBATCH --output=logs/%j_eval_humaneval.log     
 #SBATCH --ntasks=1               
 #SBATCH --nodes=1          
-#SBATCH --gres=gpu:a6000:1
+#SBATCH --gres=gpu:a6000:4
 #SBATCH --cpus-per-task=8 
 #SBATCH --mem=64G                
 #SBATCH --time=24:00:00    
@@ -27,7 +27,8 @@ export LOGLEVEL=INFO
 accelerate config default --config_file config.yaml
 
 # Run evaluations
-accelerate launch eval_llada.py \
+accelerate launch --multi_gpu --num_processes=4 --main_process_port=29501 \
+    eval_llada.py \
     --tasks humaneval \
     --model llada_dist \
     --confirm_run_unsafe_code \
