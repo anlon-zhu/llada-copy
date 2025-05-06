@@ -263,27 +263,29 @@ class LLaDAEvalHarness(LM):
         
         ds = ds.map(_tokenize)
         ds = ds.with_format("torch")
-        logger.info(f"[Rank {self.rank}] Tokenized and formatted dataset")
 
         out = []
-        import time
-        
-        total_start = time.time()
-        for idx, elem in enumerate(tqdm(ds, desc="Generating...")):
-            prompt = elem["question"].unsqueeze(0).to(self.device)
-            stop_tokens = elem["until"]
+        for i, elem in enumerate(ds):
+            logger.info(f"[Rank {self.rank}] [{time.strftime('%X')}] about to generate instance {i+1}/{len(ds)}")
+            start = time.time()
             
-            gen_start = time.time()
-            logger.info(f"[Rank {self._rank}] Starting generation {idx+1}/{len(ds)} with {self.steps} steps")
+            generated_answer = generate(
+                self.model,
+                prompt=elem["question"].unsqueeze(0).to(self.device),
+                steps=self.steps,
+                gen_length=self.gen_length,
+                block_length=self.block_length,
+                temperature=0,
+                cfg_scale=self.cfg,
+                remasking=self.remasking,
+                mask_id=self.mask_id,
+            )
             
-            generated_answer = generate(self.model, prompt, steps=self.steps, gen_length=self.gen_length, block_length=self.block_length,
-                                    temperature=0, cfg_scale=self.cfg, remasking=self.remasking, mask_id=self.mask_id)
+            took = time.time() - start
+            logger.info(f"[Rank {self.rank}] [{time.strftime('%X')}] generate() returned in {took:.2f}s")
             
-            gen_time = time.time() - gen_start
-            logger.info(f"[Rank {self._rank}] Completed generation {idx+1} in {gen_time:.2f}s")
-            
-            generated_answer = self.tokenizer.decode(generated_answer[0][prompt.shape[1]:], skip_special_tokens=False)
-            for stop_seq in stop_tokens:
+            generated_answer = self.tokenizer.decode(generated_answer[0][elem["question"].shape[1]:], skip_special_tokens=False)
+            for stop_seq in elem["until"]:
                 if stop_seq in generated_answer:
                     generated_answer = generated_answer.split(stop_seq)[0]
 
@@ -294,9 +296,8 @@ class LLaDAEvalHarness(LM):
 
             if self.accelerator is not None:
                 self.accelerator.wait_for_everyone()
-        
-        logger.info(f"[Rank {self.rank}] ← EXIT generate_until (produced {len(out)} answers)")
 
+        logger.info(f"[Rank {self.rank}] ← EXIT generate_until (produced {len(out)} answers)")
         return out
 
 
