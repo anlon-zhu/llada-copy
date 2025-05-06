@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --job-name=eval_humaneval_base
-#SBATCH --output=logs/%j_eval_humaneval_base.log     
+#SBATCH --job-name=eval_humaneval_instruct
+#SBATCH --output=logs/%j_eval_humaneval_instruct.log     
 #SBATCH --ntasks=1               
 #SBATCH --nodes=1          
 #SBATCH --gres=gpu:a6000:8
@@ -31,10 +31,10 @@ mkdir -p $TMPDIR
 accelerate config default --config_file config.yaml
 
 # Run evaluations
-accelerate launch --multi_gpu --num_processes=8 --main_process_port=29501 \
+accelerate launch --multi_gpu --num_processes=8 --main_process_port=29502 \
     eval_llada.py \
     --tasks humaneval \
     --model llada_dist \
     --confirm_run_unsafe_code \
-    --model_args model_path='GSAI-ML/LLaDA-8B-Base',gen_length=1024,steps=1024,block_length=1024 \
-    --output_path ../results/humaneval_base.json
+    --model_args model_path='GSAI-ML/LLaDA-8B-Instruct',gen_length=1024,steps=1024,block_length=1024 \
+    --output_path ../results/humaneval_instruct.json

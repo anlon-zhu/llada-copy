@@ -16,9 +16,17 @@ from lm_eval.api.registry import register_model
 from lm_eval.evaluator import eval_logger as logger
 from tqdm import tqdm
 
-from transformers import AutoTokenizer, AutoModel, BitsAndBytesConfig
+from transformers import AutoTokenizer, AutoModel
 from generate import generate
 import time
+
+# monkey-patch TaskConfig to ignore unexpected 'group' kwarg
+from lm_eval.api.task import TaskConfig
+_orig_tc_init = TaskConfig.__init__
+def _patched_tc_init(self, *args, **kwargs):
+    kwargs.pop('group', None)
+    return _orig_tc_init(self, *args, **kwargs)
+TaskConfig.__init__ = _patched_tc_init
 
 def set_seed(seed):
     torch.manual_seed(seed)
@@ -76,12 +84,10 @@ class LLaDAEvalHarness(LM):
         if self.accelerator is not None:
             model_kwargs.update({'device_map': {'': f'{self.accelerator.device}'}})
 
-        bnb_config = BitsAndBytesConfig(load_in_8bit=True)
         self.model = AutoModel.from_pretrained(
             model_path,
             trust_remote_code=True,
             low_cpu_mem_usage=True,
-            quantization_config=bnb_config,
             torch_dtype=torch.float16,
         )
         self.model.eval()
