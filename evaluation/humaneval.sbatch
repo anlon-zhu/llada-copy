@@ -21,6 +21,7 @@ source ../scripts/cache_setup.sh
 # Set required environment variables
 export HF_ALLOW_CODE_EVAL=1
 export HF_DATASETS_TRUST_REMOTE_CODE=true
+export LOGLEVEL=INFO
 
 # Configure accelerate for distributed training
 accelerate config default --config_file config.yaml

@@ -19,6 +19,8 @@ from transformers import AutoTokenizer, AutoModel
 from generate import generate
 import logging
 
+logger = logging.getLogger(__name__)
+
 def set_seed(seed):
     torch.manual_seed(seed)
     random.seed(seed)
@@ -258,9 +260,6 @@ class LLaDAEvalHarness(LM):
 
         out = []
         import time
-        import logging
-        logging.basicConfig(level=logging.INFO)
-        logger = logging.getLogger(__name__)
         
         total_start = time.time()
         for idx, elem in enumerate(tqdm(ds, desc="Generating...")):
