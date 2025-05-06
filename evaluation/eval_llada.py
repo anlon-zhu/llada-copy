@@ -17,7 +17,7 @@ from tqdm import tqdm
 
 from transformers import AutoTokenizer, AutoModel
 from generate import generate
-
+import logging
 
 def set_seed(seed):
     torch.manual_seed(seed)
