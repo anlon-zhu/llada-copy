@@ -276,8 +276,8 @@ class LLaDAEvalHarness(LM):
             
             # Add progress callback for generation
             def progress_callback(step, total_steps):
-                if step % 100 == 0:  # Log every 100 steps
-                    logger.info(f"[Rank {self._rank}] Generation progress: {step}/{total_steps} steps")
+                if step % 10 == 0:  # Log every 10 steps
+                    logger.info(f"[Rank {self._rank}] Generation progress: {step}/{total_steps} steps ({(step/total_steps)*100:.1f}%)")
             
             generated_answer = generate(self.model, prompt, steps=self.steps, gen_length=self.gen_length, block_length=self.block_length,
                                      temperature=0, cfg_scale=self.cfg, remasking=self.remasking, mask_id=self.mask_id,
@@ -305,9 +305,14 @@ if __name__ == "__main__":
     # Configure logging to show INFO level messages
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        force=True
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        force=True,
+        handlers=[
+            logging.StreamHandler(),
+            logging.FileHandler('eval.log')
+        ]
     )
+    logger.info("Starting evaluation...")
     set_seed(1234)
     cli_evaluate()
     
