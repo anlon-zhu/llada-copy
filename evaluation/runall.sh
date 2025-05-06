@@ -6,3 +6,4 @@ sbatch humaneval.sbatch
 sbatch humaneval_instruct.sbatch
 sbatch codexglue_java.sbatch
 sbatch codexglue_go.sbatch
+sbatch codexglue_javascript.sbatch
