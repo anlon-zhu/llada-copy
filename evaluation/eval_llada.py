@@ -15,7 +15,7 @@ from lm_eval.api.model import LM
 from lm_eval.api.registry import register_model
 from tqdm import tqdm
 
-from transformers import AutoTokenizer, AutoModel
+from transformers import AutoTokenizer, AutoModel, BitsAndBytesConfig
 from generate import generate
 import logging
 
@@ -77,7 +77,14 @@ class LLaDAEvalHarness(LM):
         if self.accelerator is not None:
             model_kwargs.update({'device_map': {'': f'{self.accelerator.device}'}})
 
-        self.model = AutoModel.from_pretrained(model_path, trust_remote_code=True, torch_dtype=torch.bfloat16, **model_kwargs)
+        bnb_config = BitsAndBytesConfig(load_in_8bit=True)
+        self.model = AutoModel.from_pretrained(
+            model_path,
+            trust_remote_code=True,
+            low_cpu_mem_usage=True,
+            quantization_config=bnb_config,
+            torch_dtype=torch.float16,
+        )
         self.model.eval()
 
         self.device = torch.device(device)

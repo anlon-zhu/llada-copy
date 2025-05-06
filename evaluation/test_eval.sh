@@ -5,6 +5,8 @@ export HF_ALLOW_CODE_EVAL=1
 export HF_DATASETS_TRUST_REMOTE_CODE=true
 export LOGLEVEL=INFO
 
+cd /n/fs/vl/anlon/llada-copy/evaluation
+
 # Run with minimal settings for testing
 accelerate launch \
     eval_llada.py \
