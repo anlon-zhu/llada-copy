@@ -270,8 +270,14 @@ class LLaDAEvalHarness(LM):
             gen_start = time.time()
             logger.info(f"[Rank {self._rank}] Starting generation {idx+1}/{len(ds)} with {self.steps} steps")
             
-            generated_answer = generate(self.model, prompt, steps=self.steps, gen_length=self.gen_length, block_length=self.block_length, 
-                                        temperature=0, cfg_scale=self.cfg, remasking=self.remasking, mask_id=self.mask_id)
+            # Add progress callback for generation
+            def progress_callback(step, total_steps):
+                if step % 100 == 0:  # Log every 100 steps
+                    logger.info(f"[Rank {self._rank}] Generation progress: {step}/{total_steps} steps")
+            
+            generated_answer = generate(self.model, prompt, steps=self.steps, gen_length=self.gen_length, block_length=self.block_length,
+                                     temperature=0, cfg_scale=self.cfg, remasking=self.remasking, mask_id=self.mask_id,
+                                     progress_callback=progress_callback)
             
             gen_time = time.time() - gen_start
             logger.info(f"[Rank {self._rank}] Completed generation {idx+1} in {gen_time:.2f}s")
