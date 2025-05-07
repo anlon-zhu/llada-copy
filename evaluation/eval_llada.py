@@ -5,7 +5,6 @@ import os
 import logging
 
 # Configure logging levels
-os.environ['TORCH_LOGS'] = 'ERROR'  # Suppress PyTorch logs below ERROR level
 logging.getLogger('torch._dynamo').setLevel(logging.ERROR)
 logging.getLogger('torch._inductor').setLevel(logging.ERROR)
 logging.getLogger('torch._logging').setLevel(logging.ERROR)
@@ -28,6 +27,8 @@ from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModel, BitsAndBytesConfig
 from generate import generate
 import time
+
+accelerate.Accelerator.wait_for_everyone = lambda self: None
 
 # monkey-patch TaskConfig to ignore unexpected 'group' kwarg
 from lm_eval.api.task import TaskConfig
