@@ -1,6 +1,15 @@
 '''
 This file is inspired by the code from https://github.com/ML-GSAI/SMDM
 '''
+import os
+import logging
+
+# Configure logging levels
+os.environ['TORCH_LOGS'] = 'ERROR'  # Suppress PyTorch logs below ERROR level
+logging.getLogger('torch._dynamo').setLevel(logging.ERROR)
+logging.getLogger('torch._inductor').setLevel(logging.ERROR)
+logging.getLogger('torch._logging').setLevel(logging.ERROR)
+
 import accelerate
 import torch
 import re
