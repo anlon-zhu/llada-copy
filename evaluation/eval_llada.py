@@ -273,50 +273,63 @@ class LLaDAEvalHarness(LM):
         # Process requests directly without datasets overhead
         processed = [
             {
-                "question": torch.tensor(self.tokenizer(req.args[0])["input_ids"]).to(self.device),
+                "question_ids": torch.tensor(self.tokenizer(req.args[0])["input_ids"]),
                 "question_text": req.args[0],
                 "until": req.args[1]["until"]
             }
             for req in requests
         ]
+        
+        # Move all tensors to device in one batch
+        processed = [
+            {
+                "question_ids": x["question_ids"].to(self.device),
+                "question_text": x["question_text"],
+                "until": x["until"]
+            }
+            for x in processed
+        ]
+        
         logger.info(f"[LLADA] [Rank {self.rank}] Processed {len(processed)} instances")
-
+        
+        self.model.eval()
         out = []
-        for i, elem in enumerate(processed):
-            # 1. Create prompt tensor and get its length
-            prompt = elem["question"].unsqueeze(0)
-            prefix_len = prompt.shape[1]
+        with torch.no_grad():
+            for i, elem in enumerate(processed, start=1):
+                logger.info(f"[LLADA] [Rank {self.rank}] about to generate instance {i}/{len(processed)}")
+                prefix_len = elem["question_ids"].shape[0]
+                start = time.time()
+                
+                # Generate with no gradient tracking
+                generated = generate(
+                    self.model,
+                    prompt=elem["question_ids"].unsqueeze(0),
+                    steps=self.steps,
+                    gen_length=self.gen_length,
+                    block_length=self.block_length,
+                    temperature=0,
+                    cfg_scale=self.cfg,
+                    remasking=self.remasking,
+                    mask_id=self.mask_id,
+                )
+                
+                took = time.time() - start
+                logger.info(f"[LLADA] [Rank {self.rank}] generate() returned in {took:.2f}s")
 
-            # 2. Log and generate
-            logger.info(f"[LLADA] [Rank {self.rank}] about to generate instance {i+1}/{len(processed)}")
-            start = time.time()
-            
-            generated_answer = generate(
-                self.model,
-                prompt=prompt,
-                steps=self.steps,
-                gen_length=self.gen_length,
-                block_length=self.block_length,
-                temperature=0,
-                cfg_scale=self.cfg,
-                remasking=self.remasking,
-                mask_id=self.mask_id,
-            )
-            
-            took = time.time() - start
-            logger.info(f"[LLADA] [Rank {self.rank}] generate() returned in {took:.2f}s")
-            
-            # 3. Decode output, stripping prompt tokens
-            token_ids = generated_answer[0][prefix_len:]
-            generated_answer = self.tokenizer.decode(token_ids, skip_special_tokens=False)
-            for stop_seq in elem["until"]:
-                if stop_seq in generated_answer:
-                    generated_answer = generated_answer.split(stop_seq)[0]
+                # Process generation output
+                token_ids = generated[0][prefix_len:]
+                generated_answer = self.tokenizer.decode(token_ids, skip_special_tokens=False)
+                for stop_seq in elem["until"]:
+                    if stop_seq in generated_answer:
+                        generated_answer = generated_answer.split(stop_seq)[0]
 
-            # remove special tokens
-            decoded_ids = self.tokenizer(generated_answer)["input_ids"]
-            generated_answer = self.tokenizer.decode(decoded_ids, skip_special_tokens=True)
-            out.append(generated_answer)
+                # Clean up and decode final answer
+                decoded_ids = self.tokenizer(generated_answer)["input_ids"]
+                generated_answer = self.tokenizer.decode(decoded_ids, skip_special_tokens=True)
+                out.append(generated_answer)
+                
+                # Clear cache after each generation
+                torch.cuda.empty_cache()
 
         logger.info(f"[LLADA] [Rank {self.rank}] EXIT generate_until (produced {len(out)} answers)")
         return out
