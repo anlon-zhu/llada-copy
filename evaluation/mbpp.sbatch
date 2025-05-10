@@ -2,8 +2,10 @@
 #SBATCH --job-name=eval_mbpp_base
 #SBATCH --output=logs/%j_eval_mbpp_base.log     
 #SBATCH --ntasks=1               
-#SBATCH --nodes=1          
-#SBATCH --gres=gpu:a6000:4
+#SBATCH --nodes=1    
+#SBATCH --partition=pvl
+#SBATCH --account=pvl      
+#SBATCH --gres=gpu:a6000:8
 #SBATCH --cpus-per-task=8 
 #SBATCH --mem=64G                
 #SBATCH --time=24:00:00    
@@ -31,7 +33,7 @@ mkdir -p $TMPDIR
 accelerate config default --config_file config.yaml
 
 # Run evaluations
-accelerate launch --multi_gpu --num_processes=4 --main_process_port=29504 \
+accelerate launch --multi_gpu --num_processes=8 --main_process_port=29504 \
     eval_llada.py \
     --tasks mbpp \
     --model llada_dist \
