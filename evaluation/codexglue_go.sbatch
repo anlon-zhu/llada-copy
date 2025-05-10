@@ -38,5 +38,6 @@ accelerate launch --multi_gpu --num_processes=4 --main_process_port=29505 \
     --tasks code2text_go \
     --model llada_dist \
     --confirm_run_unsafe_code \
+    --limit 160 \
     --model_args model_path='GSAI-ML/LLaDA-8B-Base',gen_length=128,steps=128,block_length=128 \
     --output_path ../results/codexglue_go.json
