@@ -3,6 +3,8 @@
 #SBATCH --output=logs/%j_eval_codexglue_javascript.log     
 #SBATCH --ntasks=1               
 #SBATCH --nodes=1    
+#SBATCH --partition=pvl
+#SBATCH --account=pvl
 #SBATCH --gres=gpu:a6000:4
 #SBATCH --cpus-per-task=8 
 #SBATCH --mem=64G                
