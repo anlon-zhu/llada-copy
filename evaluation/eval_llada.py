@@ -8,6 +8,14 @@ import logging
 logging.getLogger('torch._dynamo').setLevel(logging.ERROR)
 logging.getLogger('torch._inductor').setLevel(logging.ERROR)
 logging.getLogger('torch._logging').setLevel(logging.ERROR)
+os.environ['TORCH_DYNAMO_LOG_LEVEL'] = 'ERROR'
+os.environ['TORCHINDUCTOR_LOG_LEVEL'] = 'ERROR'
+os.environ['TORCHINDUCTOR_DEBUG'] = '0'
+os.environ['TORCH_LOG_LEVEL'] = 'ERROR'
+import torch._dynamo as _dynamo
+_dynamo.config.verbose = False
+import torch._inductor.config as _inductor_config
+_inductor_config.debug = False
 
 import accelerate
 import torch
