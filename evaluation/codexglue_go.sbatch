@@ -5,7 +5,7 @@
 #SBATCH --nodes=1    
 #SBATCH --partition=pvl
 #SBATCH --account=pvl
-#SBATCH --gres=gpu:a6000:8
+#SBATCH --gres=gpu:a6000:4
 #SBATCH --cpus-per-task=8 
 #SBATCH --mem=64G                
 #SBATCH --time=24:00:00    
@@ -33,10 +33,10 @@ mkdir -p $TMPDIR
 accelerate config default --config_file config.yaml
 
 # Run evaluations
-accelerate launch --multi_gpu --num_processes=8 --main_process_port=29505 \
+accelerate launch --multi_gpu --num_processes=4 --main_process_port=29505 \
     eval_llada.py \
     --tasks code2text_go \
     --model llada_dist \
     --confirm_run_unsafe_code \
-    --model_args model_path='GSAI-ML/LLaDA-8B-Base',gen_length=1024,steps=1024,block_length=1024 \
+    --model_args model_path='GSAI-ML/LLaDA-8B-Base',gen_length=128,steps=128,block_length=128 \
     --output_path ../results/codexglue_go.json
