@@ -32,10 +32,10 @@ export TMPDIR
 ### 6) Upgrade pip & install everything, skipping the wheel‐cache
 pip install --upgrade pip
 
-if [[ ! -d "bigcode-evaluation-harness" ]]; then
-  git clone https://github.com/bigcode-project/bigcode-evaluation-harness.git
-fi
-pip install -e bigcode-evaluation-harness
+# if [[ ! -d "bigcode-evaluation-harness" ]]; then
+#   git clone https://github.com/bigcode-project/bigcode-evaluation-harness.git
+# fi
+# pip install -e bigcode-evaluation-harness
 
 pip install --no-cache-dir \
   transformers==4.49.0 \
