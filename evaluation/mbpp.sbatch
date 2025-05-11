@@ -33,10 +33,11 @@ mkdir -p $TMPDIR
 accelerate config default --config_file config.yaml
 
 # Run evaluations
-accelerate launch --multi_gpu --num_processes=8 --main_process_port=29504 \
+accelerate launch --multi_gpu --num_processes=4 --main_process_port=29503 \
     eval_llada.py \
     --tasks mbpp \
     --model llada_dist \
     --confirm_run_unsafe_code \
     --model_args model_path='GSAI-ML/LLaDA-8B-Base',gen_length=128,steps=128,block_length=128 \
+    --limit 160 \
     --output_path ../results/mbpp_base.json
