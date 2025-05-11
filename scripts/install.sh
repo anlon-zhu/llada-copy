@@ -42,7 +42,7 @@ pip install --no-cache-dir \
   torch \
   accelerate==0.34.2 \
   bitsandbytes \
-  bitsandbytes-cuda128 \
+  bitsandbytes-cuda125 \
   gradio \
   "huggingface_hub>=0.15.1,<0.29" \
   "peft" \

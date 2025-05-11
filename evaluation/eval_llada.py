@@ -32,9 +32,26 @@ from lm_eval.api.registry import register_model
 from lm_eval.evaluator import eval_logger as logger
 from tqdm import tqdm
 
+# Import transformers first before applying any patches
+import transformers
 from transformers import AutoTokenizer, AutoModel, BitsAndBytesConfig
+from transformers.modeling_utils import caching_allocator_warmup as original_caching_allocator_warmup
 from generate import generate
 import time
+
+# Monkey patch caching_allocator_warmup to handle None _tp_plan
+def patched_caching_allocator_warmup(model, device_map, factor=2):
+    try:
+        # Check if model._tp_plan is None and set a default empty list
+        if not hasattr(model, '_tp_plan') or model._tp_plan is None:
+            model._tp_plan = []
+        return original_caching_allocator_warmup(model, device_map, factor)
+    except Exception as e:
+        logger.warning(f"Error in caching_allocator_warmup: {e}")
+        return
+
+# Apply the patch
+transformers.modeling_utils.caching_allocator_warmup = patched_caching_allocator_warmup
 
 accelerate.Accelerator.wait_for_everyone = lambda self: None
 
