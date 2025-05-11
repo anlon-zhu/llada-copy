@@ -38,5 +38,6 @@ accelerate launch --multi_gpu --num_processes=4 --main_process_port=29503 \
     --tasks mbpp \
     --model llada_dist \
     --confirm_run_unsafe_code \
-    --model_args model_path='GSAI-ML/LLaDA-8B-Instruct',gen_length=1024,steps=1024,block_length=1024 \
+    --model_args model_path='GSAI-ML/LLaDA-8B-Instruct',gen_length=128,steps=128,block_length=128 \
+    --limit 160 \
     --output_path ../results/mbpp_instruct.json
