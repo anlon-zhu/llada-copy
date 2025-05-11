@@ -21,7 +21,7 @@ conda activate llada
 source scripts/cache_setup.sh
 
 module avail cuda             # list available cuda modules
-module load cuda/11.8         # adjust to the version you plan to use
+module load cudatoolkit/12.8
 
 nvidia-smi | head -n 5
 
