@@ -51,6 +51,6 @@ pip install --no-cache-dir \
   sympy \
   hf_xet
 
-pip install -e .
+# pip install -e .
 
 echo "✅ llada is ready"
