@@ -39,7 +39,7 @@ pip install --upgrade pip
 
 pip install --no-cache-dir \
   transformers==4.49.0 \
-  torch \ 
+  torch \
   accelerate==0.34.2 \
   bitsandbytes \
   bitsandbytes-cuda128 \
