@@ -35,8 +35,8 @@ accelerate config default --config_file config.yaml
 # Run evaluations
 accelerate launch --multi_gpu --num_processes=4 --main_process_port=29502 \
     eval_llada.py \
-    --tasks humaneval \
+    --tasks humaneval_instruct \
     --model llada_dist \
     --confirm_run_unsafe_code \
     --model_args model_path='GSAI-ML/LLaDA-8B-Instruct',gen_length=128,steps=128,block_length=128 \
-    --output_path ../results/humaneval_instruct.json
+    --output_path ../results/humaneval_instruct_2.json
