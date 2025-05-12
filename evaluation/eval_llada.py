@@ -5,13 +5,13 @@ import os
 import logging
 
 # Configure logging levels
-logging.getLogger('torch._dynamo').setLevel(logging.ERROR)
-logging.getLogger('torch._inductor').setLevel(logging.ERROR)
-logging.getLogger('torch._logging').setLevel(logging.ERROR)
-os.environ['TORCH_DYNAMO_LOG_LEVEL'] = 'ERROR'
-os.environ['TORCHINDUCTOR_LOG_LEVEL'] = 'ERROR'
-os.environ['TORCHINDUCTOR_DEBUG'] = '0'
-os.environ['TORCH_LOG_LEVEL'] = 'ERROR'
+# logging.getLogger('torch._dynamo').setLevel(logging.ERROR)
+# logging.getLogger('torch._inductor').setLevel(logging.ERROR)
+# logging.getLogger('torch._logging').setLevel(logging.ERROR)
+# os.environ['TORCH_DYNAMO_LOG_LEVEL'] = 'ERROR'
+# os.environ['TORCHINDUCTOR_LOG_LEVEL'] = 'ERROR'
+# os.environ['TORCHINDUCTOR_DEBUG'] = '0'
+# os.environ['TORCH_LOG_LEVEL'] = 'ERROR'
 import torch._dynamo as _dynamo
 _dynamo.config.verbose = False
 import torch._inductor.config as _inductor_config
@@ -31,32 +31,26 @@ from lm_eval.api.model import LM
 from lm_eval.api.registry import register_model
 from lm_eval.evaluator import eval_logger as logger
 from tqdm import tqdm
-
-# Import transformers first before applying any patches
 import transformers
 from transformers import AutoTokenizer, AutoModel, BitsAndBytesConfig
 from transformers.modeling_utils import caching_allocator_warmup as original_caching_allocator_warmup
 from generate import generate
 import time
 
-# Monkey patch caching_allocator_warmup to handle None _tp_plan
+# Monkey patch caching_allocator_warmup
 def patched_caching_allocator_warmup(model, device_map, factor=2):
     try:
-        # Check if model._tp_plan is None and set a default empty list
         if not hasattr(model, '_tp_plan') or model._tp_plan is None:
             model._tp_plan = []
         return original_caching_allocator_warmup(model, device_map, factor)
     except Exception as e:
         logger.warning(f"Error in caching_allocator_warmup: {e}")
         return
-
-# Apply the patch
 transformers.modeling_utils.caching_allocator_warmup = patched_caching_allocator_warmup
-
 accelerate.Accelerator.wait_for_everyone = lambda self: None
-
-# monkey-patch TaskConfig to ignore unexpected 'group' kwarg
 from lm_eval.api.task import TaskConfig
+
+# monkey patch due to lm_eval api change
 _orig_tc_init = TaskConfig.__init__
 def _patched_tc_init(self, *args, **kwargs):
     kwargs.pop('group', None)

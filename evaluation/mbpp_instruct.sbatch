@@ -3,9 +3,7 @@
 #SBATCH --output=logs/%j_eval_mbpp_instruct.log     
 #SBATCH --ntasks=1               
 #SBATCH --nodes=1      
-#SBATCH --partition=pvl
-#SBATCH --account=pvl       
-#SBATCH --gres=gpu:a6000:4
+#SBATCH --gres=gpu:a6000:8
 #SBATCH --cpus-per-task=8 
 #SBATCH --mem=64G                
 #SBATCH --time=24:00:00    
@@ -33,11 +31,10 @@ mkdir -p $TMPDIR
 accelerate config default --config_file config.yaml
 
 # Run evaluations
-accelerate launch --multi_gpu --num_processes=4 --main_process_port=29503 \
+accelerate launch --multi_gpu --num_processes=8 --main_process_port=29503 \
     eval_llada.py \
     --tasks mbpp \
     --model llada_dist \
     --confirm_run_unsafe_code \
-    --model_args model_path='GSAI-ML/LLaDA-8B-Instruct',gen_length=128,steps=128,block_length=128 \
-    --limit 160 \
+    --model_args model_path='GSAI-ML/LLaDA-8B-Instruct',gen_length=1024,steps=1024,block_length=1024 \
     --output_path ../results/mbpp_instruct.json
